@@ -21,15 +21,15 @@ public class Server {
         taskList = new TaskList();
 
         tpm = new ThreadPoolManager(new Integer(args[1]), taskList);
-        tpm.start();
+        tpm.initialize();
 
         startServer(new Integer(args[0]));
     }
 
     public static void startServer(final int PORT) throws IOException{
-        selector = Selector.open();
+        selector = Selector.open(); //Create selector
 
-        serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel = ServerSocketChannel.open(); //Create socket channel, configure blocking, and bind
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(new InetSocketAddress(PORT));
 
@@ -42,6 +42,7 @@ public class Server {
 
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
+            System.out.println(selector.selectedKeys().size());
             while(iterator.hasNext()){
                 SelectionKey key = iterator.next();
 
@@ -51,15 +52,21 @@ public class Server {
                     socketChannel.register(selector, SelectionKey.OP_READ);
                 }
                 if(key.isReadable()){
-                    ByteBuffer buffer = ByteBuffer.allocate(4);
+                    //System.out.println("Read request.");
 
-                    SocketChannel client = (SocketChannel) key.channel();
-                    client.read(buffer);
+                    SocketChannel socketChannel = (SocketChannel) key.channel();
 
-                    taskList.add(new ReadTask(key));
+
+                    //taskList.add(new ReadTask(key));
                 }
 
                 iterator.remove();
+            }
+
+            try{
+                Thread.sleep(2000);
+            } catch (Exception e){
+                System.out.println();
             }
         }
     }

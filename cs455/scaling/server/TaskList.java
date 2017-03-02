@@ -11,11 +11,12 @@ public class TaskList {
 
     public synchronized void add(Task t){
         tasks.add(t);
+        notify();
     }
 
-    public synchronized Task poll(){
+    public synchronized Task poll() throws InterruptedException{
         if(tasks.size() < 1)
-            return null;
+            wait();
 
         Task t = tasks.get(0);
         tasks.remove(0);

@@ -1,5 +1,6 @@
 package cs455.scaling.server;
 
+import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
 public abstract class Task {
@@ -13,5 +14,5 @@ public abstract class Task {
         return key;
     }
 
-    public abstract void execute();
+    public abstract void execute() throws IOException;
 }
