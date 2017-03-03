@@ -15,8 +15,8 @@ public class TaskList {
     }
 
     public synchronized Task poll() throws InterruptedException{
-        if(tasks.size() < 1)
-            wait();
+        while(tasks.size() < 1)
+            wait(10);
 
         Task t = tasks.get(0);
         tasks.remove(0);

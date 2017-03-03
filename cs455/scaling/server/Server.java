@@ -37,12 +37,13 @@ public class Server {
 
         System.out.println("cs455.scaling.server.server running on port " + PORT);
 
+        ByteBuffer buffer = ByteBuffer.allocate(8000);
+
         while(true){
             selector.select();
 
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
-            System.out.println(selector.selectedKeys().size());
             while(iterator.hasNext()){
                 SelectionKey key = iterator.next();
 
@@ -52,21 +53,14 @@ public class Server {
                     socketChannel.register(selector, SelectionKey.OP_READ);
                 }
                 if(key.isReadable()){
-                    //System.out.println("Read request.");
+                    key.interestOps(SelectionKey.OP_WRITE);
+                    taskList.add(new ReadTask(key, taskList));
+                }
+                if(key.isWritable()){
 
-                    SocketChannel socketChannel = (SocketChannel) key.channel();
-
-
-                    //taskList.add(new ReadTask(key));
                 }
 
                 iterator.remove();
-            }
-
-            try{
-                Thread.sleep(2000);
-            } catch (Exception e){
-                System.out.println();
             }
         }
     }
