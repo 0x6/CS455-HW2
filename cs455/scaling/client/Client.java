@@ -1,5 +1,7 @@
 package cs455.scaling.client;
 
+import cs455.scaling.server.SynchronizedStatistics;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
@@ -11,19 +13,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Client {
-    final static int LENGTH = 8000;
-    public static SocketChannel socketChannel;
+    private final static int LENGTH = 8000;
+    private static SocketChannel socketChannel;
 
-    static ArrayList<String> hashes = new ArrayList<String>();
-
+    private static ArrayList<String> hashes = new ArrayList<String>();
+    private static SynchronizedStatistics synched;
 
     public static void main(String[] args) throws IOException, InterruptedException{
         socketChannel = SocketChannel.open(new InetSocketAddress(args[0], new Integer(args[1])));
-
         ByteBuffer buffer = ByteBuffer.allocate(LENGTH);
+
+        synched = new SynchronizedStatistics();
 
         new Thread(new Runnable(){
             @Override
@@ -35,14 +40,26 @@ public class Client {
                         ByteBuffer readBuffer = ByteBuffer.allocate(8000);
                         length = socketChannel.read(readBuffer);
 
-                        String b = new String(Arrays.copyOfRange(readBuffer.array(), 0, length));
-                        System.out.println(hashes.contains(b) + " " + b);
+                        String receivedHash = new String(Arrays.copyOfRange(readBuffer.array(), 0, length));
+
+                        if(hashes.contains(receivedHash)){
+                            hashes.remove(receivedHash);
+                            synched.incrementReceived();
+                        }
                     }
                 } catch (Exception e){
                     System.out.println("Unable to read from socketChannel.");
                 }
             }
         }).start();
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synched.printStats();
+            }
+        }, 10000, 10000);
 
 
         while(true){
@@ -53,6 +70,7 @@ public class Client {
             socketChannel.write(buffer);
             buffer.clear();
 
+            synched.incrementSent();
             //Thread.sleep(2500);
             Thread.sleep(1000/Integer.parseInt(args[2]));
         }
@@ -69,7 +87,7 @@ public class Client {
             System.out.println("Algorithm does not exist: " + e);
         }
 
-        return "Owendavis";
+        return "Nohash";
     }
 
     public static byte[] getRandomBytes(int length){

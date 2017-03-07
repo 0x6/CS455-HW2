@@ -56,9 +56,6 @@ public class Server {
                     key.interestOps(SelectionKey.OP_WRITE);
                     taskList.add(new ReadTask(key, taskList));
                 }
-                if(key.isWritable()){
-
-                }
 
                 iterator.remove();
             }
