@@ -1,9 +1,9 @@
 package cs455.scaling.server;
 
-public class SynchronizedStatistics {
+public class ClientStats {
     private int totalSent = 0, totalReceived = 0;
 
-    public SynchronizedStatistics(){}
+    public ClientStats(){}
 
     public synchronized void incrementSent(){
         totalSent++;

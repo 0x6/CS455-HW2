@@ -1,6 +1,7 @@
 package cs455.scaling.server;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -8,6 +9,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Server {
@@ -16,6 +19,8 @@ public class Server {
 
     private static TaskList taskList;
     private static ThreadPoolManager tpm;
+    public static ServerStats serverStats;
+    public static int numConnections;
 
     public static void main(String[] args) throws IOException{
         taskList = new TaskList();
@@ -35,10 +40,20 @@ public class Server {
 
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT); //Register channel to selector
 
-        System.out.println("cs455.scaling.server.server running on port " + PORT);
+        System.out.println("Server running at " + InetAddress.getLocalHost().getHostAddress() + ":" + PORT);
 
         ByteBuffer buffer = ByteBuffer.allocate(8000);
 
+        serverStats = new ServerStats();
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                serverStats.printStats(numConnections);
+            }
+        }, 5000, 5000);
+
+        numConnections = 0;
         while(true){
             selector.select();
 
@@ -51,6 +66,8 @@ public class Server {
                     SocketChannel socketChannel = serverSocketChannel.accept();
                     socketChannel.configureBlocking(false);
                     socketChannel.register(selector, SelectionKey.OP_READ);
+
+                    numConnections++;
                 }
                 if(key.isReadable()){
                     key.interestOps(SelectionKey.OP_WRITE);

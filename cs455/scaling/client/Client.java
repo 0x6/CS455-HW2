@@ -1,12 +1,10 @@
 package cs455.scaling.client;
 
-import cs455.scaling.server.SynchronizedStatistics;
+import cs455.scaling.server.ClientStats;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
@@ -22,13 +20,13 @@ public class Client {
     private static SocketChannel socketChannel;
 
     private static ArrayList<String> hashes = new ArrayList<String>();
-    private static SynchronizedStatistics synched;
+    private static ClientStats synched;
 
     public static void main(String[] args) throws IOException, InterruptedException{
         socketChannel = SocketChannel.open(new InetSocketAddress(args[0], new Integer(args[1])));
         ByteBuffer buffer = ByteBuffer.allocate(LENGTH);
 
-        synched = new SynchronizedStatistics();
+        synched = new ClientStats();
 
         new Thread(new Runnable(){
             @Override
@@ -45,6 +43,8 @@ public class Client {
                         if(hashes.contains(receivedHash)){
                             hashes.remove(receivedHash);
                             synched.incrementReceived();
+                        } else {
+                            System.out.println("Something went wrong, hash missing. " + receivedHash);
                         }
                     }
                 } catch (Exception e){
@@ -71,7 +71,6 @@ public class Client {
             buffer.clear();
 
             synched.incrementSent();
-            //Thread.sleep(2500);
             Thread.sleep(1000/Integer.parseInt(args[2]));
         }
     }
@@ -87,7 +86,7 @@ public class Client {
             System.out.println("Algorithm does not exist: " + e);
         }
 
-        return "Nohash";
+        return "nohash";
     }
 
     public static byte[] getRandomBytes(int length){

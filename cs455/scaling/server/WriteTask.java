@@ -23,5 +23,7 @@ public class WriteTask extends Task {
 
         SocketChannel channel = (SocketChannel) key.channel();
         channel.write(buffer);
+
+        Server.serverStats.incrementThroughput();
     }
 }
